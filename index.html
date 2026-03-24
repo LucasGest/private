@@ -1,0 +1,1322 @@
+<!doctype html>
+<html lang="fr" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NebulaCraft — Gestionnaire de chaîne Twitch</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css" />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"
+      defer></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+      defer></script>
+  </head>
+  <body>
+    <canvas id="starfield" aria-hidden="true"></canvas>
+
+    <!-- ======== SIDE NAV ======== -->
+    <nav class="sidenav">
+      <div class="sidenav-logo">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+          <circle cx="11" cy="11" r="4" fill="white" opacity="0.9" />
+          <ellipse
+            cx="11"
+            cy="11"
+            rx="10"
+            ry="4.5"
+            stroke="white"
+            stroke-width="1.2"
+            fill="none"
+            opacity="0.5" />
+          <ellipse
+            cx="11"
+            cy="11"
+            rx="10"
+            ry="4.5"
+            stroke="white"
+            stroke-width="1.2"
+            fill="none"
+            opacity="0.3"
+            transform="rotate(60 11 11)" />
+        </svg>
+      </div>
+      <button class="nav-item active" data-page="dashboard">
+        <span class="ni-icon">⬡</span><span class="ni-label">Base</span>
+      </button>
+      <button class="nav-item" data-page="schedule">
+        <span class="ni-icon">◎</span><span class="ni-label">Orbite</span
+        ><span class="ni-pip"></span>
+      </button>
+      <button class="nav-item" data-page="emotes">
+        <span class="ni-icon">✦</span><span class="ni-label">Emotes</span>
+      </button>
+      <button class="nav-item" data-page="badges">
+        <span class="ni-icon">◈</span><span class="ni-label">Badges</span>
+      </button>
+      <button class="nav-item" data-page="points">
+        <span class="ni-icon">◆</span><span class="ni-label">Énergie</span>
+      </button>
+      <button class="nav-item" data-page="overlay">
+        <span class="ni-icon">▣</span><span class="ni-label">Overlay</span>
+      </button>
+      <div class="sidenav-spacer"></div>
+      <div class="nav-theme" id="theme-btn" onclick="toggleTheme()">☀</div>
+    </nav>
+
+    <!-- ======== TOPBAR ======== -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="page-icon" id="page-icon">⬡</span>
+        <span class="page-title" id="page-title">Base d'opérations</span>
+      </div>
+      <div class="topbar-center">
+        <div class="channel-entry">
+          <span class="channel-at">twitch.tv/</span>
+          <input
+            type="text"
+            id="channel-name"
+            class="channel-input"
+            placeholder="votre_chaîne"
+            oninput="onChannelInput()" />
+          <button class="btn-save-channel" onclick="saveAll()">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 14 14"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8">
+              <path
+                d="M11 1H3L1 3v8a1 1 0 001 1h9a1 1 0 001-1V2a1 1 0 00-1-1z" />
+              <path d="M4 1v3.5h6V1M7 7v4" />
+            </svg>
+            Sauvegarder
+          </button>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <span class="badge-live"><span class="live-dot"></span>LIVE</span>
+      </div>
+    </header>
+
+    <!-- ======== APP BODY ======== -->
+    <div class="app-body">
+      <!-- ======== DASHBOARD ======== -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-scroll">
+          <div class="dash-wrap">
+            <div class="channel-hero" id="channel-hero">
+              <div class="hero-nebula"></div>
+              <div class="hero-content">
+                <div class="hero-avatar" id="hero-avatar">
+                  <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                    <circle cx="18" cy="18" r="7" fill="white" opacity="0.9" />
+                    <ellipse
+                      cx="18"
+                      cy="18"
+                      rx="16"
+                      ry="7"
+                      stroke="white"
+                      stroke-width="1.5"
+                      fill="none"
+                      opacity="0.4" />
+                    <ellipse
+                      cx="18"
+                      cy="18"
+                      rx="16"
+                      ry="7"
+                      stroke="white"
+                      stroke-width="1.5"
+                      fill="none"
+                      opacity="0.25"
+                      transform="rotate(60 18 18)" />
+                  </svg>
+                </div>
+                <div class="hero-info">
+                  <div class="hero-channel-name" id="hero-channel-name">
+                    Votre Chaîne
+                  </div>
+                  <div class="hero-channel-url">
+                    twitch.tv/<span id="hero-url-slug">—</span>
+                  </div>
+                  <div class="hero-tags">
+                    <span class="hero-tag" id="hero-tag-streams"
+                      >0 streams/semaine</span
+                    >
+                    <span class="hero-tag" id="hero-tag-emotes">0 emotes</span>
+                    <span class="hero-tag" id="hero-tag-rewards"
+                      >0 récompenses</span
+                    >
+                  </div>
+                </div>
+                <div class="hero-status">
+                  <div class="hero-status-dot"></div>
+                  <span>Opérationnel</span>
+                </div>
+              </div>
+            </div>
+            <div class="dash-modules">
+              <div class="module-card" onclick="switchPage('schedule')">
+                <div class="module-orbit"></div>
+                <div class="module-icon">◎</div>
+                <div class="module-name">Planning orbital</div>
+                <div class="module-desc">
+                  Organisez vos sessions de stream semaine par semaine
+                </div>
+                <div class="module-stat">
+                  <span class="module-num" id="d-streams">0</span
+                  ><span class="module-unit">sessions</span>
+                </div>
+                <div class="module-bar">
+                  <div
+                    class="module-bar-fill"
+                    id="db-streams"
+                    style="width: 0%"></div>
+                </div>
+              </div>
+              <div class="module-card" onclick="switchPage('emotes')">
+                <div class="module-orbit" style="animation-delay: -2s"></div>
+                <div class="module-icon">✦</div>
+                <div class="module-name">Emotes stellaires</div>
+                <div class="module-desc">
+                  Générez vos emotes à partir d'objets célestes réels
+                </div>
+                <div class="module-stat">
+                  <span class="module-num" id="d-emotes">0</span
+                  ><span class="module-unit">emotes</span>
+                </div>
+                <div class="module-bar">
+                  <div
+                    class="module-bar-fill"
+                    id="db-emotes"
+                    style="width: 0%; --bar-color: var(--nebula-pink)"></div>
+                </div>
+              </div>
+              <div class="module-card" onclick="switchPage('badges')">
+                <div class="module-orbit" style="animation-delay: -4s"></div>
+                <div class="module-icon">◈</div>
+                <div class="module-name">Badges de rang</div>
+                <div class="module-desc">
+                  Badges en 3 formats requis : 72, 36 et 18 px
+                </div>
+                <div class="module-stat">
+                  <span class="module-num" id="d-badges">0</span
+                  ><span class="module-unit">paliers</span>
+                </div>
+                <div class="module-bar">
+                  <div
+                    class="module-bar-fill"
+                    id="db-badges"
+                    style="width: 0%; --bar-color: var(--nebula-gold)"></div>
+                </div>
+              </div>
+              <div class="module-card" onclick="switchPage('points')">
+                <div class="module-orbit" style="animation-delay: -6s"></div>
+                <div class="module-icon">◆</div>
+                <div class="module-name">Énergie de chaîne</div>
+                <div class="module-desc">
+                  Icône et récompenses pour vos points de chaîne
+                </div>
+                <div class="module-stat">
+                  <span class="module-num" id="d-rewards">0</span
+                  ><span class="module-unit">récompenses</span>
+                </div>
+                <div class="module-bar">
+                  <div
+                    class="module-bar-fill"
+                    id="db-rewards"
+                    style="width: 0%; --bar-color: var(--nebula-teal)"></div>
+                </div>
+              </div>
+            </div>
+            <div class="mission-section">
+              <div class="section-header">
+                <span class="section-title">Journal de mission</span>
+                <span class="section-sub">Progression de votre chaîne</span>
+              </div>
+              <div id="dash-progress" class="mission-log"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======== PLANNING ======== -->
+      <div class="page" id="page-schedule">
+        <div class="side-panel">
+          <div class="sp-block">
+            <div class="sp-label">Nouvelle mission</div>
+            <div class="field">
+              <label>Jeu / Catégorie</label>
+              <select id="f-game">
+                <option value="">Sélectionner...</option>
+                <option>Valorant</option>
+                <option>Minecraft</option>
+                <option>League of Legends</option>
+                <option>Just Chatting</option>
+                <option>Fortnite</option>
+                <option>Elden Ring</option>
+                <option>Warzone</option>
+                <option>Apex Legends</option>
+                <option>GTA V</option>
+                <option>IRL</option>
+                <option>Musique</option>
+                <option>Tournoi</option>
+                <option value="__custom">✏ Personnalisé...</option>
+              </select>
+            </div>
+            <div class="field" id="custom-wrap" style="display: none">
+              <label>Nom personnalisé</label>
+              <input
+                type="text"
+                id="f-custom"
+                placeholder="Ex: Lethal Company" />
+            </div>
+            <div class="field">
+              <label>Jour</label>
+              <select id="f-day">
+                <option value="0">Lundi</option>
+                <option value="1">Mardi</option>
+                <option value="2">Mercredi</option>
+                <option value="3">Jeudi</option>
+                <option value="4">Vendredi</option>
+                <option value="5">Samedi</option>
+                <option value="6">Dimanche</option>
+              </select>
+            </div>
+            <div class="row-2">
+              <div class="field">
+                <label>Décollage</label
+                ><input type="time" id="f-start" value="20:00" />
+              </div>
+              <div class="field">
+                <label>Atterrissage</label
+                ><input type="time" id="f-end" value="23:00" />
+              </div>
+            </div>
+            <div class="field">
+              <label>Couleur du slot</label>
+              <div class="color-row" id="color-row">
+                <div
+                  class="swatch active"
+                  data-c="#8b5cf6"
+                  style="background: #8b5cf6; color: #8b5cf6"></div>
+                <div
+                  class="swatch"
+                  data-c="#ec4899"
+                  style="background: #ec4899; color: #ec4899"></div>
+                <div
+                  class="swatch"
+                  data-c="#f59e0b"
+                  style="background: #f59e0b; color: #f59e0b"></div>
+                <div
+                  class="swatch"
+                  data-c="#10b981"
+                  style="background: #10b981; color: #10b981"></div>
+                <div
+                  class="swatch"
+                  data-c="#06b6d4"
+                  style="background: #06b6d4; color: #06b6d4"></div>
+                <div
+                  class="swatch"
+                  data-c="#ef4444"
+                  style="background: #ef4444; color: #ef4444"></div>
+                <div
+                  class="swatch"
+                  data-c="#f97316"
+                  style="background: #f97316; color: #f97316"></div>
+                <div
+                  class="swatch"
+                  data-c="#a78bfa"
+                  style="background: #a78bfa; color: #a78bfa"></div>
+              </div>
+            </div>
+            <div class="field" style="margin-bottom: 13px">
+              <label>Log de mission</label>
+              <textarea id="f-note" placeholder="Collab, tournoi..."></textarea>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="addStream()">
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 13 13"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2">
+                <path d="M6.5 1v11M1 6.5h11" />
+              </svg>
+              Lancer la mission
+            </button>
+          </div>
+          <div class="sp-block">
+            <div class="sp-row">
+              <span class="sp-label">Accès rapides</span>
+            </div>
+            <div class="quick-list" id="quick-list"></div>
+            <button class="btn-add-sc" onclick="openModal('shortcut-modal')">
+              <svg
+                width="11"
+                height="11"
+                viewBox="0 0 11 11"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2">
+                <path d="M5.5 1v9M1 5.5h9" />
+              </svg>
+              Ajouter un accès
+            </button>
+          </div>
+          <div class="sp-block">
+            <div class="sp-label">Paramètres</div>
+            <div class="toggle-row" style="margin-bottom: 10px">
+              <span class="toggle-lbl">Afficher les horaires</span>
+              <div
+                class="toggle on"
+                id="tog-times"
+                onclick="toggleSetting('times')"></div>
+            </div>
+            <div class="toggle-row" style="margin-bottom: 12px">
+              <span class="toggle-lbl">Afficher les notes</span>
+              <div
+                class="toggle on"
+                id="tog-notes"
+                onclick="toggleSetting('notes')"></div>
+            </div>
+            <div class="sched-action-row">
+              <button class="btn btn-cosmos btn-sm" onclick="loadDemo()">
+                ⚡ Exemple
+              </button>
+              <button class="btn btn-danger btn-sm" onclick="clearAll()">
+                ✕ Effacer
+              </button>
+              <button class="btn btn-cosmos btn-sm" onclick="exportPNG()">
+                ↓ PNG
+              </button>
+              <button class="btn btn-cosmos btn-sm" onclick="exportPDF()">
+                ↓ PDF
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="sched-main">
+          <div class="stats-bar">
+            <div class="stat-cell accent">
+              <div class="stat-lbl">Missions</div>
+              <div class="stat-val" id="s-count">0</div>
+            </div>
+            <div class="stat-cell">
+              <div class="stat-lbl">Heures de vol</div>
+              <div class="stat-val" id="s-hours">0h</div>
+            </div>
+            <div class="stat-cell">
+              <div class="stat-lbl">Jours actifs</div>
+              <div class="stat-val" id="s-days">0/7</div>
+            </div>
+            <div class="stat-cell">
+              <div class="stat-lbl">Système principal</div>
+              <div
+                class="stat-val"
+                id="s-top"
+                style="font-size: 12px; padding-top: 6px">
+                —
+              </div>
+            </div>
+          </div>
+          <div class="week-toolbar">
+            <div class="week-title">
+              Orbite du <span id="week-label">—</span>
+            </div>
+            <div class="week-nav">
+              <button class="btn btn-cosmos btn-sm" onclick="shiftWeek(-1)">
+                ← Préc.
+              </button>
+              <span class="week-range" id="week-range">…</span>
+              <button class="btn btn-cosmos btn-sm" onclick="shiftWeek(1)">
+                Suiv. →
+              </button>
+            </div>
+          </div>
+          <div class="schedule-wrap"><div id="schedule-canvas"></div></div>
+        </div>
+      </div>
+
+      <!-- ======== EMOTES ======== -->
+      <div class="page" id="page-emotes">
+        <div class="tool-layout">
+          <div class="tool-sidebar">
+            <div class="tool-label">Générer une emote</div>
+            <div class="field">
+              <label>Nom de l'emote</label
+              ><input type="text" id="e-name" placeholder="Ex: NovaPog" />
+            </div>
+
+            <!-- Objet céleste avec prévisualisation inline -->
+            <div class="field">
+              <label>Objet céleste</label>
+              <div class="object-picker" id="emote-picker">
+                <div class="obj-item active" data-val="pillars_of_creation">
+                  <canvas class="obj-thumb" width="40" height="40"></canvas>
+                  <span>Piliers de la Création</span>
+                </div>
+                <div class="obj-item" data-val="crab_nebula">
+                  <canvas class="obj-thumb" width="40" height="40"></canvas>
+                  <span>Nébuleuse du Crabe</span>
+                </div>
+                <div class="obj-item" data-val="black_hole_m87">
+                  <canvas class="obj-thumb" width="40" height="40"></canvas>
+                  <span>Trou noir M87</span>
+                </div>
+                <div class="obj-item" data-val="milky_way">
+                  <canvas class="obj-thumb" width="40" height="40"></canvas>
+                  <span>Voie Lactée</span>
+                </div>
+                <div class="obj-item" data-val="cassiopeia_a">
+                  <canvas class="obj-thumb" width="40" height="40"></canvas>
+                  <span>Cassiopée A</span>
+                </div>
+                <div class="obj-item" data-val="aurora_borealis">
+                  <canvas class="obj-thumb" width="40" height="40"></canvas>
+                  <span>Aurora Borealis</span>
+                </div>
+                <div class="obj-item" data-val="omega_centauri">
+                  <canvas class="obj-thumb" width="40" height="40"></canvas>
+                  <span>Oméga Centauri</span>
+                </div>
+                <div class="obj-item" data-val="ring_nebula">
+                  <canvas class="obj-thumb" width="40" height="40"></canvas>
+                  <span>Nébuleuse de l'Anneau</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Tier</label>
+              <select id="e-tier">
+                <option value="sub1">Abonné Tier 1</option>
+                <option value="sub2">Abonné Tier 2</option>
+                <option value="sub3">Abonné Tier 3</option>
+                <option value="bit">Bits</option>
+                <option value="free">Gratuite</option>
+              </select>
+            </div>
+            <button
+              class="btn btn-primary btn-full"
+              style="margin-bottom: 8px"
+              onclick="generateEmote()">
+              ✦ Générer l'emote
+            </button>
+            <button
+              class="btn btn-cosmos btn-full"
+              onclick="document.getElementById('e-img-upload').click()">
+              ↑ Importer une image
+            </button>
+            <input
+              type="file"
+              id="e-img-upload"
+              accept="image/*"
+              style="display: none"
+              onchange="uploadEmote(event)" />
+            <div class="specs-box" style="margin-top: 12px">
+              <strong>Specs Twitch :</strong> PNG · 28, 56, 112 px · fond
+              transparent
+            </div>
+          </div>
+          <div class="tool-main">
+            <h2 class="tool-section-title">Emotes stellaires</h2>
+            <p class="tool-section-sub">
+              Chaque emote est générée fidèlement à l'objet céleste réel.
+              Cliquez sur une taille pour télécharger.
+            </p>
+            <div class="filter-bar" id="emote-filters">
+              <button
+                class="filter-btn active"
+                onclick="filterEmotes('all', this)">
+                Toutes
+              </button>
+              <button class="filter-btn" onclick="filterEmotes('todo', this)">
+                À créer
+              </button>
+              <button class="filter-btn" onclick="filterEmotes('review', this)">
+                En révision
+              </button>
+              <button class="filter-btn" onclick="filterEmotes('done', this)">
+                Terminées
+              </button>
+            </div>
+            <div class="emote-grid" id="emote-grid">
+              <div class="empty-state">
+                <div class="es-icon">✦</div>
+                <p>Générez votre première emote stellaire.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======== BADGES ======== -->
+      <div class="page" id="page-badges">
+        <div class="tool-layout">
+          <div class="tool-sidebar">
+            <div class="tool-label">Nouveau palier de badge</div>
+            <div class="field">
+              <label>Nom du palier</label
+              ><input
+                type="text"
+                id="b-name"
+                placeholder="Ex: Rang 1 — Nébuleuse" />
+            </div>
+            <div class="field">
+              <label>Condition</label
+              ><input
+                type="text"
+                id="b-cond"
+                placeholder="Ex: 1 mois d'abonnement" />
+            </div>
+
+            <div class="field">
+              <label>Objet céleste</label>
+              <div class="object-picker" id="badge-picker">
+                <div class="obj-item active" data-val="mars">
+                  <canvas class="obj-thumb" width="40" height="40"></canvas>
+                  <span>Mars</span>
+                </div>
+                <div class="obj-item" data-val="jupiter">
+                  <canvas class="obj-thumb" width="40" height="40"></canvas>
+                  <span>Jupiter</span>
+                </div>
+                <div class="obj-item" data-val="saturn">
+                  <canvas class="obj-thumb" width="40" height="40"></canvas>
+                  <span>Saturne</span>
+                </div>
+                <div class="obj-item" data-val="neutron_star">
+                  <canvas class="obj-thumb" width="40" height="40"></canvas>
+                  <span>Étoile à neutrons</span>
+                </div>
+                <div class="obj-item" data-val="black_hole_badge">
+                  <canvas class="obj-thumb" width="40" height="40"></canvas>
+                  <span>Trou noir</span>
+                </div>
+                <div class="obj-item" data-val="moon_badge">
+                  <canvas class="obj-thumb" width="40" height="40"></canvas>
+                  <span>Lune</span>
+                </div>
+                <div class="obj-item" data-val="sun">
+                  <canvas class="obj-thumb" width="40" height="40"></canvas>
+                  <span>Soleil</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              class="btn btn-primary btn-full"
+              onclick="generateBadgeTier()">
+              ◈ Générer les 3 formats
+            </button>
+            <div class="specs-box" style="margin-top: 12px">
+              <strong>3 formats requis :</strong><br />
+              ▸ <span style="color: var(--nebula-gold)">72×72 px</span> haute
+              résolution<br />
+              ▸
+              <span style="color: var(--nebula-teal)">36×36 px</span>
+              standard<br />
+              ▸
+              <span style="color: var(--txt-2)">18×18 px</span> miniature<br />
+              PNG transparent
+            </div>
+          </div>
+          <div class="tool-main">
+            <h2 class="tool-section-title">Badges de rang</h2>
+            <p class="tool-section-sub">
+              Chaque objet est rendu fidèlement à son apparence réelle
+              (NASA/ESA). Chaque palier génère les 3 formats Twitch.
+            </p>
+            <div class="badge-tiers" id="badge-tiers">
+              <div class="empty-state">
+                <div class="es-icon">◈</div>
+                <p>Aucun palier.<br />Générez votre premier badge.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======== CHANNEL POINTS ======== -->
+      <div class="page" id="page-points">
+        <div class="tool-layout">
+          <div class="tool-sidebar">
+            <div class="tool-label">Icône des points</div>
+            <div class="cp-icon-wrap">
+              <div class="cp-icon-preview" id="cp-icon-preview">◆</div>
+              <button
+                class="btn btn-primary btn-full"
+                style="margin-bottom: 6px"
+                onclick="generateCpIcon()">
+                ◆ Générer
+              </button>
+              <button
+                class="btn btn-cosmos btn-full"
+                onclick="document.getElementById('cp-icon-file').click()">
+                ↑ Importer
+              </button>
+              <input
+                type="file"
+                id="cp-icon-file"
+                accept="image/*"
+                style="display: none"
+                onchange="handleCpIcon(event)" />
+            </div>
+
+            <div class="field" style="margin-top: 12px">
+              <label>Objet céleste</label>
+              <div class="object-picker" id="cp-picker">
+                <div class="obj-item active" data-val="cp_supernova">
+                  <canvas class="obj-thumb" width="40" height="40"></canvas>
+                  <span>Supernova</span>
+                </div>
+                <div class="obj-item" data-val="cp_pulsar">
+                  <canvas class="obj-thumb" width="40" height="40"></canvas>
+                  <span>Pulsar</span>
+                </div>
+                <div class="obj-item" data-val="cp_nebula_cloud">
+                  <canvas class="obj-thumb" width="40" height="40"></canvas>
+                  <span>Nuage nébulaire</span>
+                </div>
+                <div class="obj-item" data-val="cp_comet">
+                  <canvas class="obj-thumb" width="40" height="40"></canvas>
+                  <span>Comète</span>
+                </div>
+                <div class="obj-item" data-val="cp_magnetar">
+                  <canvas class="obj-thumb" width="40" height="40"></canvas>
+                  <span>Magnétar</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Nom des points</label
+              ><input type="text" id="cp-point-name" value="Énergie cosmique" />
+            </div>
+
+            <div
+              style="
+                border-top: 1px solid var(--border);
+                padding-top: 14px;
+                margin-top: 6px;
+              ">
+              <div class="tool-label">Nouvelle récompense</div>
+              <div class="field">
+                <label>Nom</label
+                ><input
+                  type="text"
+                  id="r-name"
+                  placeholder="Ex: Choisir la musique" />
+              </div>
+              <div class="field">
+                <label>Description</label
+                ><textarea
+                  id="r-desc"
+                  placeholder="Description..."
+                  style="min-height: 44px"></textarea>
+              </div>
+              <div class="field">
+                <label>Coût</label
+                ><input type="number" id="r-cost" placeholder="500" min="1" />
+              </div>
+              <div class="field">
+                <label>Icône (emoji)</label
+                ><input
+                  type="text"
+                  id="r-icon"
+                  placeholder="🎵"
+                  maxlength="2" />
+              </div>
+              <div class="field">
+                <label>Couleur</label>
+                <div class="color-row" id="reward-color-row">
+                  <div
+                    class="swatch active"
+                    data-c="#8b5cf6"
+                    style="background: #8b5cf6; color: #8b5cf6"></div>
+                  <div
+                    class="swatch"
+                    data-c="#ec4899"
+                    style="background: #ec4899; color: #ec4899"></div>
+                  <div
+                    class="swatch"
+                    data-c="#f59e0b"
+                    style="background: #f59e0b; color: #f59e0b"></div>
+                  <div
+                    class="swatch"
+                    data-c="#10b981"
+                    style="background: #10b981; color: #10b981"></div>
+                  <div
+                    class="swatch"
+                    data-c="#06b6d4"
+                    style="background: #06b6d4; color: #06b6d4"></div>
+                  <div
+                    class="swatch"
+                    data-c="#f97316"
+                    style="background: #f97316; color: #f97316"></div>
+                </div>
+              </div>
+              <button class="btn btn-primary btn-full" onclick="addReward()">
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 13 13"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2">
+                  <path d="M6.5 1v11M1 6.5h11" />
+                </svg>
+                Ajouter
+              </button>
+            </div>
+          </div>
+          <div class="tool-main">
+            <h2 class="tool-section-title">Énergie de chaîne</h2>
+            <p class="tool-section-sub">
+              Configurez l'icône cosmique et les récompenses pour vos viewers.
+            </p>
+            <div class="cp-columns">
+              <div class="cp-col-main">
+                <div class="cp-col-title">Récompenses actives</div>
+                <div class="reward-grid" id="reward-grid">
+                  <div class="empty-state">
+                    <div class="es-icon">◆</div>
+                    <p>Aucune récompense.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="cp-col-side">
+                <div class="cp-col-title">Idées de l'équipage</div>
+                <div class="ideas-list" id="ideas-list"></div>
+                <button
+                  class="btn-add-sc"
+                  style="margin-top: 8px"
+                  onclick="openModal('idea-modal')">
+                  <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 11 11"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M5.5 1v9M1 5.5h9" />
+                  </svg>
+                  Nouvelle idée
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======== OVERLAY ======== -->
+      <div class="page" id="page-overlay">
+        <div class="ov-layout">
+          <!-- LEFT: config panel -->
+          <div class="ov-sidebar">
+            <!-- Template picker -->
+            <div class="ov-section">
+              <div class="ov-section-title">Template</div>
+              <div class="ov-template-grid" id="ov-template-grid">
+                <div
+                  class="ov-tpl active"
+                  data-tpl="nebula_stream"
+                  title="Nebula Stream">
+                  <div
+                    class="ov-tpl-preview"
+                    id="tpl-thumb-nebula_stream"></div>
+                  <span>Nebula Stream</span>
+                </div>
+                <div class="ov-tpl" data-tpl="deep_space" title="Deep Space">
+                  <div class="ov-tpl-preview" id="tpl-thumb-deep_space"></div>
+                  <span>Deep Space</span>
+                </div>
+                <div class="ov-tpl" data-tpl="pulsar_hud" title="Pulsar HUD">
+                  <div class="ov-tpl-preview" id="tpl-thumb-pulsar_hud"></div>
+                  <span>Pulsar HUD</span>
+                </div>
+                <div
+                  class="ov-tpl"
+                  data-tpl="aurora_chill"
+                  title="Aurora Chill">
+                  <div class="ov-tpl-preview" id="tpl-thumb-aurora_chill"></div>
+                  <span>Aurora Chill</span>
+                </div>
+                <div
+                  class="ov-tpl"
+                  data-tpl="blackhole_minimal"
+                  title="Black Hole">
+                  <div
+                    class="ov-tpl-preview"
+                    id="tpl-thumb-blackhole_minimal"></div>
+                  <span>Black Hole</span>
+                </div>
+                <div
+                  class="ov-tpl"
+                  data-tpl="supernova_alert"
+                  title="Supernova">
+                  <div
+                    class="ov-tpl-preview"
+                    id="tpl-thumb-supernova_alert"></div>
+                  <span>Supernova</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Type picker -->
+            <div class="ov-section">
+              <div class="ov-section-title">Type d'overlay</div>
+              <div class="ov-type-tabs" id="ov-type-tabs">
+                <button class="ov-type-tab active" data-type="full">
+                  Full Stream
+                </button>
+                <button class="ov-type-tab" data-type="webcam">Webcam</button>
+                <button class="ov-type-tab" data-type="starting">
+                  Starting Soon
+                </button>
+                <button class="ov-type-tab" data-type="brb">BRB</button>
+                <button class="ov-type-tab" data-type="ending">Ending</button>
+                <button class="ov-type-tab" data-type="panel">Panel</button>
+              </div>
+            </div>
+
+            <!-- Text customisation -->
+            <div class="ov-section">
+              <div class="ov-section-title">Textes</div>
+              <div class="field">
+                <label>Nom de la chaîne</label
+                ><input
+                  type="text"
+                  id="ov-channel"
+                  placeholder="MaChaine"
+                  oninput="ovUpdate()" />
+              </div>
+              <div class="field">
+                <label>Slogan / tagline</label
+                ><input
+                  type="text"
+                  id="ov-tagline"
+                  placeholder="Ex: Exploring the cosmos"
+                  oninput="ovUpdate()" />
+              </div>
+              <div class="field">
+                <label>Message (BRB / Starting…)</label
+                ><input
+                  type="text"
+                  id="ov-msg"
+                  placeholder="Retour dans 5 min…"
+                  oninput="ovUpdate()" />
+              </div>
+              <div class="field">
+                <label>Jeu en cours</label
+                ><input
+                  type="text"
+                  id="ov-game"
+                  placeholder="Valorant"
+                  oninput="ovUpdate()" />
+              </div>
+            </div>
+
+            <!-- Éléments visibles -->
+            <div class="ov-section">
+              <div class="ov-section-title">Éléments</div>
+              <div class="ov-toggle-row">
+                <span>Webcam frame</span>
+                <div
+                  class="toggle on"
+                  id="tog-ov-webcam"
+                  onclick="ovToggle('webcam')"></div>
+              </div>
+              <div class="ov-toggle-row">
+                <span>Chat box</span>
+                <div
+                  class="toggle on"
+                  id="tog-ov-chat"
+                  onclick="ovToggle('chat')"></div>
+              </div>
+              <div class="ov-toggle-row">
+                <span>Alertes</span>
+                <div
+                  class="toggle on"
+                  id="tog-ov-alerts"
+                  onclick="ovToggle('alerts')"></div>
+              </div>
+              <div class="ov-toggle-row">
+                <span>Barre de progression</span>
+                <div
+                  class="toggle"
+                  id="tog-ov-bar"
+                  onclick="ovToggle('bar')"></div>
+              </div>
+              <div class="ov-toggle-row">
+                <span>Particules / FX</span>
+                <div
+                  class="toggle on"
+                  id="tog-ov-fx"
+                  onclick="ovToggle('fx')"></div>
+              </div>
+              <div class="ov-toggle-row">
+                <span>Logo chaîne</span>
+                <div
+                  class="toggle on"
+                  id="tog-ov-logo"
+                  onclick="ovToggle('logo')"></div>
+              </div>
+            </div>
+
+            <!-- Palette accent -->
+            <div class="ov-section">
+              <div class="ov-section-title">Couleur accent</div>
+              <div class="color-row" id="ov-color-row">
+                <div
+                  class="swatch active"
+                  data-c="#8b5cf6"
+                  style="background: #8b5cf6; color: #8b5cf6"></div>
+                <div
+                  class="swatch"
+                  data-c="#06b6d4"
+                  style="background: #06b6d4; color: #06b6d4"></div>
+                <div
+                  class="swatch"
+                  data-c="#ec4899"
+                  style="background: #ec4899; color: #ec4899"></div>
+                <div
+                  class="swatch"
+                  data-c="#10b981"
+                  style="background: #10b981; color: #10b981"></div>
+                <div
+                  class="swatch"
+                  data-c="#f59e0b"
+                  style="background: #f59e0b; color: #f59e0b"></div>
+                <div
+                  class="swatch"
+                  data-c="#ef4444"
+                  style="background: #ef4444; color: #ef4444"></div>
+                <div
+                  class="swatch"
+                  data-c="#f97316"
+                  style="background: #f97316; color: #f97316"></div>
+                <div
+                  class="swatch"
+                  data-c="#ffffff"
+                  style="background: #ffffff; color: #ffffff"></div>
+              </div>
+            </div>
+
+            <!-- Export -->
+            <div class="ov-section">
+              <div class="ov-section-title">Exporter</div>
+
+
+
+              <div style="display: flex; flex-direction: column; gap: 6px">
+                <button
+                  class="btn btn-primary btn-full"
+                  onclick="ovExportPNG()">
+                  <svg
+                    width="13"
+                    height="13"
+                    viewBox="0 0 13 13"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M6.5 1v8M3 6l3.5 3.5L10 6" />
+                    <path d="M1 12h11" />
+                  </svg>
+                  PNG — image fixe
+                </button>
+                <button
+                  class="btn btn-cosmos btn-full"
+                  id="btn-gif"
+                  onclick="ovExportGIF()">
+                  <svg
+                    width="13"
+                    height="13"
+                    viewBox="0 0 13 13"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2">
+                    <rect x="1" y="3" width="11" height="7" rx="1.5" />
+                    <path d="M4 6.5h2.5M5.5 5v3M8 6h2" />
+                  </svg>
+                  GIF animé
+                </button>
+                <button
+                  class="btn btn-cosmos btn-full"
+                  id="btn-webm"
+                  onclick="ovExportWebM()">
+                  <svg
+                    width="13"
+                    height="13"
+                    viewBox="0 0 13 13"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2">
+                    <polygon points="4,2.5 11,6.5 4,10.5" />
+                  </svg>
+                  WebM — vidéo (OBS-ready)
+                </button>
+                <button class="btn btn-cosmos btn-full" onclick="ovExportAll()">
+                  <svg
+                    width="13"
+                    height="13"
+                    viewBox="0 0 13 13"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M2 2h9M2 6h9M2 10h6" />
+                  </svg>
+                  Pack PNG complet (6 types)
+                </button>
+                <button class="btn btn-cosmos btn-full" onclick="ovCopyCSS()">
+                  ⌨ Copier CSS OBS
+                </button>
+              </div>
+
+              <!-- Progress bar for GIF/WebM encoding -->
+              <div
+                id="ov-export-progress"
+                style="display: none; margin-top: 10px">
+                <div
+                  style="
+                    font-size: 10px;
+                    color: var(--txt-3);
+                    margin-bottom: 4px;
+                    font-family: var(--fd);
+                  "
+                  id="ov-export-status">
+                  Encodage en cours…
+                </div>
+                <div
+                  style="
+                    height: 4px;
+                    background: var(--bg-3);
+                    border-radius: 99px;
+                    overflow: hidden;
+                  ">
+                  <div
+                    id="ov-export-bar"
+                    style="
+                      height: 100%;
+                      width: 0%;
+                      background: var(--nebula-purple);
+                      border-radius: 99px;
+                      transition: width 0.1s;
+                    "></div>
+                </div>
+              </div>
+
+              <div
+                class="specs-box"
+                style="margin-top: 10px; font-size: 10px; line-height: 1.8">
+                <strong>Import OBS :</strong><br />
+                Ajouter une source <em>Navigateur</em><br />
+                1920 × 1080 px · FPS 30<br />
+                Fond transparent activé<br />
+                <span style="color: var(--nebula-teal)"
+                  >WebM = meilleure qualité</span
+                ><br />
+                <span style="color: var(--nebula-gold)"
+                  >GIF = compatible partout</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: live canvas preview -->
+          <div class="ov-main">
+            <div class="ov-preview-bar">
+              <span class="ov-preview-label"
+                >Prévisualisation — 1920 × 1080</span
+              >
+              <div style="display: flex; gap: 8px; align-items: center">
+                <span class="ov-fps-badge" id="ov-fps">30 FPS</span>
+                <button
+                  class="btn btn-cosmos btn-sm"
+                  onclick="ovToggleAnimate()"
+                  id="btn-anim">
+                  ⏸ Pause
+                </button>
+              </div>
+            </div>
+            <div class="ov-canvas-wrap">
+              <canvas id="ov-canvas"></canvas>
+            </div>
+            <!-- Layer list -->
+            <div class="ov-layers">
+              <div class="ov-layers-title">Calques</div>
+              <div class="ov-layer-list" id="ov-layer-list"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- overlay export canvas (off-screen) -->
+    <canvas id="ov-export-canvas" style="display: none"></canvas>
+
+    <!-- ======== MODALS ========  -->
+    <div class="modal-bg" id="stream-modal">
+      <div class="modal">
+        <div class="modal-title">
+          Ajouter une session<button
+            class="modal-close"
+            onclick="closeModal('stream-modal')">
+            ✕
+          </button>
+        </div>
+        <div class="field">
+          <label>Jeu</label
+          ><input type="text" id="m-game" placeholder="Ex: Valorant" />
+        </div>
+        <div class="field">
+          <label>Jour</label
+          ><select id="m-day">
+            <option value="0">Lundi</option>
+            <option value="1">Mardi</option>
+            <option value="2">Mercredi</option>
+            <option value="3">Jeudi</option>
+            <option value="4">Vendredi</option>
+            <option value="5">Samedi</option>
+            <option value="6">Dimanche</option>
+          </select>
+        </div>
+        <div class="row-2">
+          <div class="field">
+            <label>Début</label><input type="time" id="m-start" value="20:00" />
+          </div>
+          <div class="field">
+            <label>Fin</label><input type="time" id="m-end" value="23:00" />
+          </div>
+        </div>
+        <div class="field" style="margin-bottom: 0">
+          <label>Note</label
+          ><input type="text" id="m-note" placeholder="Optionnel" />
+        </div>
+        <div class="modal-foot">
+          <button class="btn btn-cosmos" onclick="closeModal('stream-modal')">
+            Annuler
+          </button>
+          <button class="btn btn-primary" onclick="confirmStreamModal()">
+            Lancer
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-bg" id="shortcut-modal">
+      <div class="modal modal-sm">
+        <div class="modal-title">
+          Accès rapide<button
+            class="modal-close"
+            onclick="closeModal('shortcut-modal')">
+            ✕
+          </button>
+        </div>
+        <div class="field">
+          <label>Nom</label
+          ><input
+            type="text"
+            id="sc-name"
+            placeholder="Ex: Apex Legends"
+            oninput="updateScPreview()" />
+        </div>
+        <div class="field">
+          <label>Couleur</label>
+          <div class="color-row" id="sc-color-row">
+            <div
+              class="swatch active"
+              data-c="#8b5cf6"
+              style="background: #8b5cf6; color: #8b5cf6"></div>
+            <div
+              class="swatch"
+              data-c="#ec4899"
+              style="background: #ec4899; color: #ec4899"></div>
+            <div
+              class="swatch"
+              data-c="#f59e0b"
+              style="background: #f59e0b; color: #f59e0b"></div>
+            <div
+              class="swatch"
+              data-c="#10b981"
+              style="background: #10b981; color: #10b981"></div>
+            <div
+              class="swatch"
+              data-c="#06b6d4"
+              style="background: #06b6d4; color: #06b6d4"></div>
+            <div
+              class="swatch"
+              data-c="#f97316"
+              style="background: #f97316; color: #f97316"></div>
+          </div>
+        </div>
+        <div class="sc-preview">
+          <div
+            class="sc-prev-dot"
+            id="sc-prev-dot"
+            style="background: #8b5cf6"></div>
+          <span class="sc-prev-name" id="sc-prev-name">Aperçu...</span>
+        </div>
+        <div class="modal-foot">
+          <button class="btn btn-cosmos" onclick="closeModal('shortcut-modal')">
+            Annuler
+          </button>
+          <button class="btn btn-primary" onclick="confirmShortcut()">
+            Ajouter
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-bg" id="idea-modal">
+      <div class="modal modal-sm">
+        <div class="modal-title">
+          Nouvelle idée<button
+            class="modal-close"
+            onclick="closeModal('idea-modal')">
+            ✕
+          </button>
+        </div>
+        <div class="field">
+          <label>Icône</label
+          ><input
+            type="text"
+            id="idea-ico"
+            placeholder="🎯"
+            maxlength="2"
+            value="💫" />
+        </div>
+        <div class="field" style="margin-bottom: 0">
+          <label>Description</label
+          ><input
+            type="text"
+            id="idea-txt"
+            placeholder="Ex: Mode au choix des viewers" />
+        </div>
+        <div class="modal-foot">
+          <button class="btn btn-cosmos" onclick="closeModal('idea-modal')">
+            Annuler
+          </button>
+          <button class="btn btn-primary" onclick="confirmIdea()">
+            Ajouter
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <canvas id="gen-canvas" style="display: none"></canvas>
+    <div id="export-target"></div>
+    <div class="toast" id="toast">
+      <div class="toast-dot" id="toast-dot"></div>
+      <span id="toast-msg">Transmission reçue</span>
+    </div>
+    <script src="js/index.js"></script>
+    <script src="js/overlay.js"></script>
+  </body>
+</html>
